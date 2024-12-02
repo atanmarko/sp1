@@ -90,25 +90,43 @@ impl SP1CudaProver {
     /// Creates a new [SP1Prover] that runs inside a Docker container and returns a
     /// [SP1ProverClient] that can be used to communicate with the container.
     pub fn new() -> Result<Self, Box<dyn StdError>> {
+        println!(">>>>>>>>>> Checkpoint 4.1");
         let container_name = "sp1-gpu";
         let image_name = "public.ecr.aws/succinct-labs/sp1-gpu:7e66232";
-
+        println!(">>>>>>>>>> Checkpoint 4.2");
         let cleaned_up = Arc::new(AtomicBool::new(false));
         let cleanup_name = container_name;
         let cleanup_flag = cleaned_up.clone();
+        println!(">>>>>>>>>> Checkpoint 4.3");
 
         // Check if Docker is available and the user has necessary permissions
         if !Self::check_docker_availability()? {
+            println!(">>>>>>>>>> Checkpoint 4.4");
             return Err("Docker is not available or you don't have the necessary permissions. Please ensure Docker is installed and you are part of the docker group.".into());
         }
+        println!(">>>>>>>>>> Checkpoint 4.5");
 
         // Pull the docker image if it's not present
         if let Err(e) = Command::new("docker").args(["pull", image_name]).output() {
             return Err(format!("Failed to pull Docker image: {}. Please check your internet connection and Docker permissions.", e).into());
         }
+        println!(">>>>>>>>>> Checkpoint 4.6");
 
         // Start the docker container
         let rust_log_level = std::env::var("RUST_LOG").unwrap_or_else(|_| "none".to_string());
+        println!(">>>>>>>>>> Checkpoint 4.7 {:?}", [
+            "run",
+            "-e",
+            &format!("RUST_LOG={}", rust_log_level),
+            "-p",
+            "3000:3000",
+            "--rm",
+            "--gpus",
+            "all",
+            "--name",
+            container_name,
+            image_name,
+        ].join(" "));
         let mut child = Command::new("docker")
             .args([
                 "run",
@@ -128,6 +146,8 @@ impl SP1CudaProver {
             .spawn()
             .map_err(|e| format!("Failed to start Docker container: {}. Please check your Docker installation and permissions.", e))?;
 
+        println!(">>>>>>>>>> Checkpoint 4.8");
+
         let stderr = child.stderr.take().unwrap();
         std::thread::spawn(move || {
             let mut reader = BufReader::new(stderr);
@@ -143,6 +163,8 @@ impl SP1CudaProver {
                 }
             }
         });
+
+        println!(">>>>>>>>>> Checkpoint 4.9");
 
         let stdout = child.stdout.take().unwrap();
         std::thread::spawn(move || {
@@ -160,6 +182,8 @@ impl SP1CudaProver {
             }
         });
 
+        println!(">>>>>>>>>> Checkpoint 4.10");
+
         // Kill the container on control-c
         ctrlc::set_handler(move || {
             tracing::debug!("received Ctrl+C, cleaning up...");
@@ -171,8 +195,12 @@ impl SP1CudaProver {
         })
         .unwrap();
 
+
+        println!(">>>>>>>>>> Checkpoint 4.11");
         // Wait a few seconds for the container to start
         std::thread::sleep(Duration::from_secs(2));
+
+        println!(">>>>>>>>>> Checkpoint 4.12");
 
         // Check if the container is ready
         let client = Client::from_base_url(
@@ -182,6 +210,8 @@ impl SP1CudaProver {
 
         let timeout = Duration::from_secs(300);
         let start_time = Instant::now();
+
+        println!(">>>>>>>>>> Checkpoint 4.13");
 
         block_on(async {
             tracing::info!("waiting for proving server to be ready");
@@ -208,12 +238,16 @@ impl SP1CudaProver {
             Ok(())
         })?;
 
+        println!(">>>>>>>>>> Checkpoint 4.14");
+
         let client = Client::new(
             Url::parse("http://localhost:3000/twirp/").expect("failed to parse url"),
             reqwest::Client::new(),
             vec![Box::new(LoggingMiddleware) as Box<dyn Middleware>],
         )
         .expect("failed to create client");
+
+        println!(">>>>>>>>>> Checkpoint 4.15");
 
         Ok(SP1CudaProver {
             client,
@@ -239,6 +273,7 @@ impl SP1CudaProver {
         pk: &SP1ProvingKey,
         stdin: &SP1Stdin,
     ) -> Result<SP1CoreProof, SP1CoreProverError> {
+        println!(">>>>>>>>>>>>>> PROVING CORE!!!");
         let payload = ProveCoreRequestPayload { pk: pk.clone(), stdin: stdin.clone() };
         let request =
             crate::proto::api::ProveCoreRequest { data: bincode::serialize(&payload).unwrap() };

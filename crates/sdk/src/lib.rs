@@ -78,6 +78,7 @@ impl ProverClient {
             "local" => {
                 #[cfg(debug_assertions)]
                 eprintln!("Warning: Local prover in dev mode is not recommended. Proof generation may be slow.");
+                println!(">>>>>>>>>> Checkpoint 2.1");
                 Self {
                     #[cfg(not(feature = "cuda"))]
                     prover: Box::new(CpuProver::new()),

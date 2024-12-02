@@ -19,7 +19,9 @@ pub struct CudaProver {
 impl CudaProver {
     /// Creates a new [CudaProver].
     pub fn new(prover: SP1Prover) -> Self {
+        println!(">>>>>>>>>> Checkpoint 3.1");
         let cuda_prover = SP1CudaProver::new();
+        println!(">>>>>>>>>> Checkpoint 3.2");
         Self { prover, cuda_prover: cuda_prover.expect("Failed to initialize CUDA prover") }
     }
 }
@@ -45,9 +47,11 @@ impl Prover<DefaultProverComponents> for CudaProver {
         _context: SP1Context<'a>,
         kind: SP1ProofKind,
     ) -> Result<SP1ProofWithPublicValues> {
+        println!(">>>>>>>>>> Checkpoint 5.1");
         tracing::warn!("opts and context are ignored for the cuda prover");
 
         // Generate the core proof.
+        println!(">>>>>>>>>> Checkpoint 5.2");
         let proof = self.cuda_prover.prove_core(pk, &stdin)?;
         if kind == SP1ProofKind::Core {
             return Ok(SP1ProofWithPublicValues {

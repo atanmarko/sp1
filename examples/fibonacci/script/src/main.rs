@@ -9,22 +9,30 @@ fn main() {
 
     // Create an input stream and write '500' to it.
     let n = 1000u32;
+    println!("Checkpoint 1");
 
     // The input stream that the program will read from using `sp1_zkvm::io::read`. Note that the
     // types of the elements in the input stream must match the types being read in the program.
     let mut stdin = SP1Stdin::new();
     stdin.write(&n);
+    println!("Checkpoint 1.1");
 
     // Create a `ProverClient` method.
     let client = ProverClient::new();
+
+    println!("Checkpoint 2");
 
     // Execute the program using the `ProverClient.execute` method, without generating a proof.
     let (_, report) = client.execute(ELF, stdin.clone()).run().unwrap();
     println!("executed program with {} cycles", report.total_instruction_count());
 
+    println!("Checkpoint 3");
+
     // Generate the proof for the given program and input.
     let (pk, vk) = client.setup(ELF);
+    println!("Checkpoint 4");
     let mut proof = client.prove(&pk, stdin).run().unwrap();
+    println!("Checkpoint 5");
 
     println!("generated proof");
 
