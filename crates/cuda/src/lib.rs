@@ -132,6 +132,8 @@ impl SP1CudaProver {
                 "run",
                 "-e",
                 &format!("RUST_LOG={}", rust_log_level),
+                "--runtime",
+                "nvidia",
                 "-p",
                 "3000:3000",
                 "--rm",
